@@ -1,0 +1,24 @@
+[
+  {
+    "token": "8080",
+    "symbol": "SILVERBEES-EQ",
+    "name": "SILVERBEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  },
+  {
+    "token": "13072",
+    "symbol": "IIFLSEC-EQ",
+    "name": "IIFLSEC",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "5.000000"
+  }
+]

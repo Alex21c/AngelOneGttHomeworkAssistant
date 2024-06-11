@@ -2,9 +2,9 @@
   "name": "AngelOneGttHomeworkAssistant",
   "version": "1.0.0",
   "description": "shall help me in updating gtt orders on angel one for investment purpose!",
-  "main": "index.mjs",
+  "main": "index.js",
   "scripts": {
-    "start": "node index.mjs"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/Alex21c/AngelOneGttHomeworkAssistant/issues"
   },
-  "homepage": "https://github.com/Alex21c/AngelOneGttHomeworkAssistant#readme"
+  "homepage": "https://github.com/Alex21c/AngelOneGttHomeworkAssistant#readme",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "otplib": "^12.0.1",
+    "smartapi-javascript": "^1.0.23"
+  }
 }

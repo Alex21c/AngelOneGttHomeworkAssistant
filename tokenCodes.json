@@ -1,0 +1,68 @@
+[
+  {
+    "token": "11439",
+    "symbol": "BANKBEES-EQ",
+    "name": "BANKBEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  },
+  {
+    "token": "10939",
+    "symbol": "JUNIORBEES-EQ",
+    "name": "JUNIORBEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  },
+  {
+    "token": "8506",
+    "symbol": "MID150BEES-EQ",
+    "name": "MID150BEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  },
+  {
+    "token": "10576",
+    "symbol": "NIFTYBEES-EQ",
+    "name": "NIFTYBEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  },
+  {
+    "token": "14428",
+    "symbol": "GOLDBEES-EQ",
+    "name": "GOLDBEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  },
+  {
+    "token": "8080",
+    "symbol": "SILVERBEES-EQ",
+    "name": "SILVERBEES",
+    "expiry": "",
+    "strike": "-1.000000",
+    "lotsize": "1",
+    "instrumenttype": "",
+    "exch_seg": "NSE",
+    "tick_size": "1.000000"
+  }
+]
