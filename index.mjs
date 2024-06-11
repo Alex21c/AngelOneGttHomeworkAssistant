@@ -260,7 +260,7 @@ function saveIntoExcelFile(mapClosingPrices, holdingsPAndL) {
     ]);
   });
   console.log(data);
-  if (process.env.isFetchingAndSavingClosingAndPLIntoExcelAllowed !== "false") {
+  if (process.env.isFetchingAndSavingClosingAndPLIntoExcelAllowed === "true") {
     console.log(":: Saving Closing Prices and Overall G/L into excel file!");
     // wrting to excel file
     var ws = XLSX.utils.aoa_to_sheet(data);
@@ -337,7 +337,7 @@ function modifyGtt(
       triggerprice: triggerPrice, //<<---- work on this as well, instead of 499.02 it should give me 499 i.e. should point to nearer .5 or 0
     };
     // making API Call
-    if (process.env.isAllowedToModifyGTTOrders !== "false") {
+    if (process.env.isAllowedToModifyGTTOrders === "true") {
       modifyGttOrder(orderDetail, smart_api);
     }
   } catch (error) {
