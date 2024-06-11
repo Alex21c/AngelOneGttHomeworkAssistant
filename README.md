@@ -15,15 +15,15 @@ npm run start
 
 ## .ENV FILE
 
-```javascript
-apiKey = GET_IT_FROM_ANGEL_ONE;
-mpin = GET_IT_FROM_ANGEL_ONE;
-secretKey = GET_IT_FROM_ANGEL_ONE;
-clientId = GET_IT_FROM_ANGEL_ONE;
-totp = GET_IT_FROM_ANGEL_ONE;
-isFetchingActiveGTTsAllowed = false; // true || false
-isFetchingAndSavingClosingAndPLIntoExcelAllowed = false; // true || false
-isAllowedToModifyGTTOrders = false; // true || false
+```bash
+apiKey = GET_IT_FROM_ANGEL_ONE
+mpin = GET_IT_FROM_ANGEL_ONE
+secretKey = GET_IT_FROM_ANGEL_ONE
+clientId = GET_IT_FROM_ANGEL_ONE
+totp = GET_IT_FROM_ANGEL_ONE
+isFetchingActiveGTTsAllowed = false // true || false
+isFetchingAndSavingClosingAndPLIntoExcelAllowed = false // true || false
+isAllowedToModifyGTTOrders = false // true || false
 ```
 
 ## Tech. Stack Used:
