@@ -1,4 +1,6 @@
 import "dotenv/config";
+import XLSX from "xlsx";
+
 import { authenticator } from "otplib";
 import { SmartAPI, WebSocket, WebSocketV2 } from "smartapi-javascript";
 import fs from "node:fs";
@@ -9,11 +11,19 @@ let smart_api = new SmartAPI({
 
 const scriptsRealNames = {
   BankBees: "BANKBEES-EQ",
+  GoldBees: "GOLDBEES-EQ",
   JuniorBees: "JUNIORBEES-EQ",
   Mid150Bees: "MID150BEES-EQ",
   NiftyBees: "NIFTYBEES-EQ",
-  GoldBees: "GOLDBEES-EQ",
   SilverBees: "SILVERBEES-EQ",
+};
+const scriptsFormalNames = {
+  "BANKBEES-EQ": "BankBees",
+  "GOLDBEES-EQ": "GoldBees",
+  "JUNIORBEES-EQ": "JuniorBees",
+  "MID150BEES-EQ": "Mid150Bees",
+  "NIFTYBEES-EQ": "NiftyBees",
+  "SILVERBEES-EQ": "SilverBees",
 };
 
 const investMentCapitalAllowedOneTenth = {
@@ -127,15 +137,15 @@ async function modifyGttOrder(orderDetail, smart_api) {
   console.log("Modifying GTT ORDER !");
   console.log(orderDetail);
 
-  // await smart_api.modifyRule(orderDetail);
+  await smart_api.modifyRule(orderDetail);
 }
 
 function modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices) {
   Object.entries(GttIds.yesterdayClose).forEach(([howMuchPercent, obj]) => {
-    console.log(`\nProcessing ${howMuchPercent}`);
+    console.log(`\n:: Processing ${howMuchPercent}`);
     Object.entries(obj).forEach(([script, gttID]) => {
       if (gttID) {
-        console.log(`\n:: ${script}: ${gttID}`);
+        console.log(`:: ${script}: ${gttID}`);
         modifyGtt(
           gttID,
           script,
@@ -238,6 +248,53 @@ function roundOffTriggerPrice(triggerPrice) {
   return triggerPrice;
 }
 
+function saveIntoExcelFile(mapClosingPrices, holdingsPAndL) {
+  // let me crate array of array in the format Script, NSE-Close, OverallG/L
+  let data = [];
+  data.push(["Script", "NSE-Close", "OverallG/L"]);
+  Object.entries(scriptsRealNames).forEach(([scriptName, value]) => {
+    data.push([
+      scriptName,
+      mapClosingPrices.get(scriptsRealNames[scriptName]),
+      holdingsPAndL[scriptName] + "%",
+    ]);
+  });
+  console.log(data);
+  if (process.env.isFetchingAndSavingClosingAndPLIntoExcelAllowed !== "false") {
+    console.log(":: Saving Closing Prices and Overall G/L into excel file!");
+    // wrting to excel file
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    /* create workbook and export */
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.writeFile(wb, "closingPricesAndHoldingsPAndL.xlsx");
+  }
+}
+
+async function fetchOverallGainLoss(smart_api) {
+  try {
+    console.log(":: Fetching overall G/L");
+    let holdings = await smart_api.getHolding();
+    if (holdings) {
+      holdings = holdings.data;
+    } else {
+      throw new Error("failed to fetch overall P&L");
+    }
+    // creating simple mapping out of it
+    const mappingPAndL = {};
+    holdings.forEach((script) => {
+      const scriptFormalName = scriptsFormalNames[script.tradingsymbol];
+      if (scriptFormalName !== undefined) {
+        mappingPAndL[scriptFormalName] = script.pnlpercentage;
+      }
+    });
+
+    return mappingPAndL;
+  } catch (error) {
+    throw error;
+  }
+}
+
 function modifyGtt(
   gttID,
   scriptName,
@@ -289,12 +346,9 @@ function modifyGtt(
 }
 
 async function init() {
-  // to log out myself
-  function customSessionHook() {
-    console.log("User loggedout");
-    // NEW AUTHENTICATION CAN TAKE PLACE HERE
-  }
-
+  smart_api.setSessionExpiryHook(() => {
+    console.log(":: +++++++++++++Logging Out");
+  });
   try {
     // authenticate
     await smart_api.generateSession(
@@ -303,18 +357,24 @@ async function init() {
       authenticator.generate(process.env.totp)
     );
 
+    // return;
     // do the work
-    // return smart_api.getHolding();
 
     // fetching latest GTTs
     fetchActiveGTTsAndStoreThemIntoFile(smart_api);
+
+    // fetching holding
+    const holdingsPAndL = await fetchOverallGainLoss(smart_api);
 
     // Getting closing prices
     console.log(":: Fetching Closing Prices");
     const mapClosingPrices = await initializeTheClosingPriceOfAllScripts(
       smart_api
     );
-    console.log(mapClosingPrices);
+    // console.log(mapClosingPrices);
+
+    // saving into excel file
+    saveIntoExcelFile(mapClosingPrices, holdingsPAndL);
 
     // let me try to modify any gtt order
     console.log(":: Modifying GTT");
@@ -322,11 +382,12 @@ async function init() {
 
     modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices);
 
-    console.log(":: All done Gracefully !");
+    console.log("\n:: All done Gracefully !");
   } catch (error) {
     console.log("ERROR: ", error.message);
   } finally {
-    smart_api.setSessionExpiryHook(customSessionHook);
+    console.log("logged out!");
+    await smart_api.logout(process.env.clientId);
   }
 }
 
