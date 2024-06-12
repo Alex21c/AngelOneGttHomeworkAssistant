@@ -140,22 +140,43 @@ async function modifyGttOrder(orderDetail, smart_api) {
   await smart_api.modifyRule(orderDetail);
 }
 
-function modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices) {
-  Object.entries(GttIds.yesterdayClose).forEach(([howMuchPercent, obj]) => {
-    console.log(`\n:: Processing ${howMuchPercent}`);
-    Object.entries(obj).forEach(([script, gttID]) => {
-      if (gttID) {
-        console.log(`:: ${script}: ${gttID}`);
-        modifyGtt(
-          gttID,
-          script,
-          percentMappings.get(howMuchPercent),
-          mapClosingPrices
-        );
-        // now i want to get the yesterday closing price of current script
-      }
+async function modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices) {
+  return new Promise((resolve, reject) => {
+    let timeout = 1000;
+    let promises = [];
+    Object.entries(GttIds.yesterdayClose).forEach(([howMuchPercent, obj]) => {
+      Object.entries(obj).forEach(([script, gttID]) => {
+        if (gttID) {
+          let promise = new Promise((resolve) => {
+            setTimeout(() => {
+              console.log(`\n:: Processing ${howMuchPercent}`);
+              console.log(`:: ${script}: ${gttID}`);
+              console.log(":: API req made to modify gtt!");
+              modifyGtt(
+                gttID,
+                script,
+                percentMappings.get(howMuchPercent),
+                mapClosingPrices
+              );
+              resolve();
+            }, timeout);
+          });
+
+          promises.push(promise);
+          timeout += Number(process.env.timeOutDelayBetweenModifyGttReq);
+          // now i want to get the yesterday closing price of current script
+        }
+      });
+      // console.log(obj)
     });
-    // console.log(obj)
+    Promise.all(promises)
+      .then(() => {
+        resolve("processing completed!");
+      })
+      .catch((err) => {
+        reject(err);
+      });
+    // resolve("processing completed!");
   });
 }
 // modifyGTTAccToYesterdayClose(GttIds);
@@ -380,7 +401,7 @@ async function init() {
     console.log(":: Modifying GTT");
     // i want its price to be 2% less than closing price
 
-    modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices);
+    await modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices);
 
     console.log("\n:: All done Gracefully !");
   } catch (error) {
