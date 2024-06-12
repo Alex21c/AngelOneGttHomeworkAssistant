@@ -24,6 +24,7 @@ totp = GET_IT_FROM_ANGEL_ONE
 isFetchingActiveGTTsAllowed = false // true || false
 isFetchingAndSavingClosingAndPLIntoExcelAllowed = false // true || false
 isAllowedToModifyGTTOrders = false // true || false
+timeOutDelayBetweenModifyGttReq=1000 
 ```
 
 ## Tech. Stack Used:
