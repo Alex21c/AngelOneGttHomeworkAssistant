@@ -21,10 +21,12 @@ mpin = GET_IT_FROM_ANGEL_ONE
 secretKey = GET_IT_FROM_ANGEL_ONE
 clientId = GET_IT_FROM_ANGEL_ONE
 totp = GET_IT_FROM_ANGEL_ONE
-isFetchingActiveGTTsAllowed = false // true || false
-isFetchingAndSavingClosingAndPLIntoExcelAllowed = false // true || false
-isAllowedToModifyGTTOrders = false // true || false
-timeOutDelayBetweenModifyGttReq=1000 
+jsonFileForStoringActiveFetchedGTTs=activeGTTsFetched.json
+excelFileNameForStoringPAndL=closingPricesAndHoldingsPAndL.xlsx
+timeOutDelayBetweenModifyGttReq=1000
+isFetchedGttsStorageIntoJsonFileRequired=false // false||true
+isFetchingAndSavingClosingAndPLIntoExcelAllowed=false // false||true
+isAllowedToModifyGTTOrders=true // false||true
 ```
 
 ## Tech. Stack Used:

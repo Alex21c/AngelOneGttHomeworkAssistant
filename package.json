@@ -23,6 +23,7 @@
   "homepage": "https://github.com/Alex21c/AngelOneGttHomeworkAssistant#readme",
   "dependencies": {
     "axios": "^1.7.2",
+    "chalk": "^5.3.0",
     "dotenv": "^16.4.5",
     "otplib": "^12.0.1",
     "smartapi-javascript": "^1.0.23",

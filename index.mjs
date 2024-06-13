@@ -1,9 +1,13 @@
 import "dotenv/config";
 import XLSX from "xlsx";
-
 import { authenticator } from "otplib";
 import { SmartAPI, WebSocket, WebSocketV2 } from "smartapi-javascript";
 import fs from "node:fs";
+import chalk from "chalk";
+
+const ChalkSuccess = chalk.green;
+const ChalkError = chalk.red;
+const ChalkWarning = chalk.yellow;
 
 let smart_api = new SmartAPI({
   api_key: process.env.apiKey, // PROVIDE YOUR API KEY HERE
@@ -140,7 +144,11 @@ async function modifyGttOrder(orderDetail, smart_api) {
   await smart_api.modifyRule(orderDetail);
 }
 
-async function modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices) {
+async function modifyGTTAccToYesterdayClose(
+  GttIds,
+  mapClosingPrices,
+  fetchedGtts
+) {
   return new Promise((resolve, reject) => {
     let timeout = 1000;
     let promises = [];
@@ -156,7 +164,8 @@ async function modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices) {
                 gttID,
                 script,
                 percentMappings.get(howMuchPercent),
-                mapClosingPrices
+                mapClosingPrices,
+                fetchedGtts
               );
               resolve();
             }, timeout);
@@ -211,21 +220,45 @@ async function initializeTheClosingPriceOfAllScripts(smart_api) {
     throw error;
   }
 }
-async function fetchActiveGTTsAndStoreThemIntoFile(smart_api) {
+
+async function fetchActiveGTTs(smart_api) {
   try {
-    if (process.env.isFetchingActiveGTTsAllowed === "true") {
-      console.log(":: Fetching Active GTTs And Storing Them into File");
-      const response = await smart_api.ruleList({
-        status: ["NEW"],
-        page: 1,
-        count: 100,
-      });
+    console.log(":: Fetching Active GTTs And Storing Them into File");
+    const response = await smart_api.ruleList({
+      status: ["NEW"],
+      page: 1,
+      count: 100,
+    });
+    if (!response?.data) {
+      throw new Error("Failed to fetch GTTs");
+    }
+    // now creating map out of it
+    const mapOfFetchedGtts = new Map();
+    response.data.forEach((gtt) => {
+      mapOfFetchedGtts.set(gtt.id, gtt);
+    });
+    return mapOfFetchedGtts;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function storeFetchedGttsIntoJsonFile(fetchedGtts) {
+  try {
+    console.log("\n:: Saving fetched GTTs into JSON file!");
+    if (process.env.isFetchedGttsStorageIntoJsonFileRequired === "true") {
       // console.log(response.data);
+      const fetchedGttsObj = Object.fromEntries(fetchedGtts);
       fs.writeFileSync(
-        "activeGTTsFetched.json",
-        JSON.stringify(response.data, null, "\t")
+        process.env.jsonFileForStoringActiveFetchedGTTs,
+        JSON.stringify(fetchedGttsObj, null, "\t")
       );
     }
+    console.log(
+      ChalkSuccess(
+        `fetched GTTs stored successfully into ${process.env.jsonFileForStoringActiveFetchedGTTs}\n`
+      )
+    );
   } catch (error) {
     throw error;
   }
@@ -269,7 +302,7 @@ function roundOffTriggerPrice(triggerPrice) {
   return triggerPrice;
 }
 
-function saveIntoExcelFile(mapClosingPrices, holdingsPAndL) {
+async function saveIntoExcelFile(mapClosingPrices, holdingsPAndL) {
   // let me crate array of array in the format Script, NSE-Close, OverallG/L
   let data = [];
   data.push(["Script", "NSE-Close", "OverallG/L"]);
@@ -282,13 +315,22 @@ function saveIntoExcelFile(mapClosingPrices, holdingsPAndL) {
   });
   console.log(data);
   if (process.env.isFetchingAndSavingClosingAndPLIntoExcelAllowed === "true") {
-    console.log(":: Saving Closing Prices and Overall G/L into excel file!");
-    // wrting to excel file
-    var ws = XLSX.utils.aoa_to_sheet(data);
-    /* create workbook and export */
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-    XLSX.writeFile(wb, "closingPricesAndHoldingsPAndL.xlsx");
+    try {
+      console.log(":: Saving Closing Prices and Overall G/L into excel file!");
+      // wrting to excel file
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      /* create workbook and export */
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      await XLSX.writeFile(wb, process.env.excelFileNameForStoringPAndL);
+      console.log(
+        ChalkSuccess(
+          `G/L Saved Successfully! into ${process.env.excelFileNameForStoringPAndL}\n`
+        )
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
@@ -320,7 +362,8 @@ function modifyGtt(
   gttID,
   scriptName,
   percentFromPreviousClose,
-  mapClosingPrices
+  mapClosingPrices,
+  fetchedGtts
 ) {
   try {
     const closingPrice = getClosingPrice(
@@ -353,13 +396,39 @@ function modifyGtt(
       id: gttID,
       symboltoken: tokensMap.get(scriptName),
       exchange: "NSE",
-      qty: quantity, //<<<<<<<<<<----------- Need to work from here, how to compute quantity?
+      qty: quantity,
       price: limitPrice,
-      triggerprice: triggerPrice, //<<---- work on this as well, instead of 499.02 it should give me 499 i.e. should point to nearer .5 or 0
+      triggerprice: triggerPrice,
     };
     // making API Call
-    if (process.env.isAllowedToModifyGTTOrders === "true") {
-      modifyGttOrder(orderDetail, smart_api);
+    // first let me check is modification actually required?
+
+    let isGttModificationRequired = true;
+    try {
+      let fetchedGtt = fetchedGtts.get(gttID);
+      // console.log(fetchedGtt);
+      if (
+        fetchedGtt.qty === orderDetail.qty &&
+        fetchedGtt.triggerprice === orderDetail.triggerprice &&
+        fetchedGtt.price === orderDetail.price
+      ) {
+        isGttModificationRequired = false;
+      }
+    } catch (error) {
+      console.log(ChalkError(error.message));
+      throw error;
+    }
+
+    if (isGttModificationRequired) {
+      if (process.env.isAllowedToModifyGTTOrders === "true") {
+        console.log(".env file allowed to modify GTT!");
+
+        modifyGttOrder(orderDetail, smart_api);
+      } else {
+        console.log(ChalkWarning("Not allowed to modify GTT, check .env!"));
+      }
+    } else {
+      console.log(ChalkSuccess("GTT modification not required! (skipping)"));
     }
   } catch (error) {
     throw new Error("Failed to modify GTT, ", error.message);
@@ -382,7 +451,9 @@ async function init() {
     // do the work
 
     // fetching latest GTTs
-    fetchActiveGTTsAndStoreThemIntoFile(smart_api);
+    const fetchedGtts = await fetchActiveGTTs(smart_api);
+
+    storeFetchedGttsIntoJsonFile(fetchedGtts);
 
     // fetching holding
     const holdingsPAndL = await fetchOverallGainLoss(smart_api);
@@ -395,17 +466,17 @@ async function init() {
     // console.log(mapClosingPrices);
 
     // saving into excel file
-    saveIntoExcelFile(mapClosingPrices, holdingsPAndL);
+    await saveIntoExcelFile(mapClosingPrices, holdingsPAndL);
 
     // let me try to modify any gtt order
     console.log(":: Modifying GTT");
     // i want its price to be 2% less than closing price
 
-    await modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices);
+    await modifyGTTAccToYesterdayClose(GttIds, mapClosingPrices, fetchedGtts);
 
     console.log("\n:: All done Gracefully !");
   } catch (error) {
-    console.log("ERROR: ", error.message);
+    console.log(ChalkError("ERROR: ", error.message));
   } finally {
     console.log("logged out!");
     await smart_api.logout(process.env.clientId);
