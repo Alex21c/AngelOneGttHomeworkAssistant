@@ -1,3 +1,12 @@
+import chalk from "chalk";
+export const ChalkSuccess = chalk.green;
+export const ChalkError = chalk.red;
+export const ChalkWarning = chalk.yellow;
+import { SmartAPI, WebSocket, WebSocketV2 } from "smartapi-javascript";
+export const smart_api = new SmartAPI({
+  api_key: process.env.apiKey, // PROVIDE YOUR API KEY HERE
+});
+
 export const scriptsRealNames = {
   BankBees: "BANKBEES-EQ",
   GoldBees: "GOLDBEES-EQ",
@@ -80,11 +89,11 @@ export const GttIds = {
   portfolio: {
     _5_Percent: {
       BankBees: 3369390,
-      GoldBees: null,
+      GoldBees: 3369428,
       JuniorBees: null,
       Mid150Bees: null,
-      NiftyBees: null,
-      SilverBees: null,
+      NiftyBees: 3369478,
+      SilverBees: 3369502,
     },
   },
 };
