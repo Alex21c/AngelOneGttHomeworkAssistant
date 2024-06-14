@@ -22,11 +22,12 @@ secretKey = GET_IT_FROM_ANGEL_ONE
 clientId = GET_IT_FROM_ANGEL_ONE
 totp = GET_IT_FROM_ANGEL_ONE
 jsonFileForStoringActiveFetchedGTTs=activeGTTsFetched.json
+setQuantityToOneForPortfolioIfClosingIsLessThanEqualToXPercent=2
 excelFileNameForStoringPAndL=closingPricesAndHoldingsPAndL.xlsx
-timeOutDelayBetweenModifyGttReq=1000
-isFetchedGttsStorageIntoJsonFileRequired=false // false||true
-isFetchingAndSavingClosingAndPLIntoExcelAllowed=false // false||true
-isAllowedToModifyGTTOrders=true // false||true
+timeOutDelayBetweenModifyGttReq=500
+isFetchedGttsStorageIntoJsonFileRequired=false
+isFetchingAndSavingClosingAndPLIntoExcelAllowed=true
+isAllowedToModifyGTTOrders=false
 ```
 
 ## Tech. Stack Used:
