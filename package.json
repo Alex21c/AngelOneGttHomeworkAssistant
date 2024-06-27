@@ -4,7 +4,7 @@
   "description": "shall help me in updating gtt orders on angel one for investment purpose!",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.mjs"
   },
   "repository": {
     "type": "git",
